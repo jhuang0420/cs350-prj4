@@ -6,13 +6,69 @@ int* mat2 = NULL;
 int* matRes = NULL;
 int* matSol = NULL;
 
+
+// M x N = mat1 
+// N x K = mat2
+// M x K = matSol/matRes
+
+// nThreads == 1
 void multiply() {
-    //TODO
+	for (int i = 0; i < M; i++) {
+		for (int j = 0; j < K; j++) {
+			matRes[i*K + j] = 0;
+			for (int k = 0; k < N; k++) {
+				matRes[i*K + j] += mat1[i*N + k] * mat2[k*K + j];
+	
+			}	
+		}
+	}
 }
 
+
+void* task(void* args) {
+	int* arg = (int*) args;
+	int start = arg[0];
+	int end = arg[1];
+
+	for (int i = start; i < end; i++) {
+		for (int j = 0; j < K; j++) {
+			matRes[i*K + j] = 0;
+			for (int k = 0; k < N; k++) {
+				matRes[i*K + j] += mat1[i*N + k] * mat2[k*K + j];
+	
+			}	
+		}
+	}
+
+	free(args);
+}
+
+
+// nThreads > 1 && nThread <= min(M, N, K)
 void multiplyWithThreads(int nThreads){
-    //TODO
-    printMats();
+
+	if (nThreads > M || nThreads > N || nThreads > K) {
+		printf("nThreads must be less than any size of matricies!\n");
+		exit(1);
+	}
+    
+	// create p_threads and divide total task into rows of the final matrix
+	pthread_t threads[nThreads];
+	int rows_per_thread = M / nThreads;
+
+	for (int i = 0; i < nThreads; i++) {
+		int* args = malloc(sizeof(int)*2);
+		args[0] = rows_per_thread*i;
+		args[1] = args[0] + rows_per_thread;
+		if (args[1] > M) args[1] = M;
+		pthread_create(&threads[i], NULL, task, (void*)args);
+	}
+
+	for (int i = 0; i < nThreads; i++) {
+		pthread_join(threads[i], NULL);
+	}
+
+	printMats();
 }
 
 //--- DO NOT MODIFY BELOW HERE ---

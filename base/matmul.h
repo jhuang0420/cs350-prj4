@@ -9,8 +9,8 @@
 #include <pthread.h>
 
 //#define SMALL
-#define MED
-//#define BIG
+//#define MED
+#define BIG
 
 #ifdef SMALL
     #define M 4
