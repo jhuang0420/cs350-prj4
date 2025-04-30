@@ -55,20 +55,28 @@ void multiplyWithThreads(int nThreads){
 	// create p_threads and divide total task into rows of the final matrix
 	pthread_t threads[nThreads];
 	int rows_per_thread = M / nThreads;
+	int extra = M - rows_per_thread * nThreads;
+
+	int start = 0;
+	int end = start + rows_per_thread;
 
 	for (int i = 0; i < nThreads; i++) {
 		int* args = malloc(sizeof(int)*2);
-		args[0] = rows_per_thread*i;
-		args[1] = args[0] + rows_per_thread;
-		if (args[1] > M) args[1] = M;
+		args[0] = start;
+		if (extra-- > 0) end++;
+		args[1] = end;
+		//if (args[1] > M) args[1] = M;
+		if (i == nThreads-1) args[1] = M;	
 		pthread_create(&threads[i], NULL, task, (void*)args);
+		start = end;
+		end += rows_per_thread;
 	}
 
 	for (int i = 0; i < nThreads; i++) {
 		pthread_join(threads[i], NULL);
 	}
 
-	printMats();
+	// printMats();
 }
 
 //--- DO NOT MODIFY BELOW HERE ---
